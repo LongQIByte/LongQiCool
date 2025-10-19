@@ -1,0 +1,147 @@
+---
+title: 'Qwen8b 模型部署教程'
+date: '2025-01-15'
+tags: ['AI', 'Docker', '模型部署', 'Qwen', 'SGLang', '机器学习']
+draft: false
+summary: '详细介绍Qwen8b大语言模型的部署流程，从Git LFS安装到Docker容器启动，包括SGLang推理框架配置和API验证方法。'
+images: ['/static/images/avatar.png']
+authors: ['default']
+layout: PostLayout
+---
+
+## 一、准备工作
+
+### 1.1 安装 Git LFS
+
+首先需要安装 Git LFS（Large File Storage）来下载大文件：
+
+```bash
+sudo apt install git-lfs
+```
+
+### 1.2 启用 Git LFS
+
+启用 Git LFS 的大文件存储模式：
+
+```bash
+git lfs install
+```
+
+当 Git 仓库中存在大文件指针时，Git LFS 会自动下载实际的大文件。
+
+典型的 Git LFS 文件指针格式如下：
+
+```text
+version https://git-lfs.github.com/spec/v1
+oid sha256:aabbccddeeff...
+size 123456789
+```
+
+下载完成后，模型文件就会出现在指定的目录中。
+
+## 二、模型部署
+
+### 2.1 选择推理框架
+
+这里我们选择使用 SGLang 作为推理框架，并通过 Docker 方式进行部署。
+
+### 2.2 拉取 Docker 镜像
+
+```bash
+docker pull lmsysorg/sglang:v0.5.2
+```
+
+> **注意**：默认的 SGLang 镜像是 CUDA 版本，标签 `v0.5.2` 对应的是 CUDA 版本。
+
+### 2.3 SGLang Docker 版本说明
+
+根据 [SGLang Docker 文档](https://github.com/sgl-project/sglang/tree/main/docker)，SGLang 提供了多种硬件支持的版本：
+
+| Dockerfile           | 支持的硬件        | 特点                       |
+| -------------------- | ----------------- | -------------------------- |
+| Dockerfile           | NVIDIA GPU (CUDA) | 默认版本，支持 CUDA 加速   |
+| Dockerfile.b300      | NVIDIA B300       | 针对 B300 优化的版本       |
+| Dockerfile.npu       | NPU               | 支持神经网络处理单元       |
+| Dockerfile.rocmi     | AMD GPU (ROCm)    | 支持 AMD GPU 的 ROCm 后端  |
+| Dockerfile.routen    | 特定硬件          | 针对特定路由器的优化版本   |
+| Dockerfile.sagemaker | AWS SageMaker     | 适用于 AWS SageMaker 环境  |
+| Dockerfile.xeon      | Intel Xeon        | 针对 Intel Xeon 处理器优化 |
+| Dockerfile.xpu       | Intel XPU         | 支持 Intel XPU 加速        |
+
+### 2.4 启动模型服务
+
+使用以下命令启动 Qwen8b 模型服务：
+
+```bash
+docker run --rm -it \
+  --gpus '"device=3"' \
+  -p 8781:30000 \
+  -v /data1/tangzhifeng/Qwen3-8B:/models/Qwen3-8B \
+  --name sglang-local \
+  lmsysorg/sglang:v0.5.2 \
+  bash -lc 'python3 -m sglang.launch_server \
+    --host 0.0.0.0 \
+    --model /models/Qwen3-8B \
+    --tp-size 1 \
+    --dp-size 1 \
+    --log-level info \
+    --mem-fraction-static 0.3 \
+    --trust-remote-code'
+```
+
+### 2.5 参数说明
+
+- `--gpus '"device=3"'`：指定使用第3号GPU
+- `-p 8781:30000`：将容器的30000端口映射到主机的8781端口
+- `-v /data1/tangzhifeng/Qwen3-8B:/models/Qwen3-8B`：挂载模型目录
+- `--tp-size 1`：张量并行大小为1
+- `--dp-size 1`：数据并行大小为1
+- `--mem-fraction-static 0.3`：静态分配30%的GPU内存
+- `--trust-remote-code`：信任远程代码执行
+
+### 2.6 验证服务
+
+服务启动后，可以通过以下curl命令验证API是否正常工作：
+
+```bash
+curl -X POST http://localhost:8781/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Qwen3-8B",
+    "messages": [
+      {
+        "role": "user",
+        "content": "你好，请介绍一下你自己"
+      }
+    ],
+    "max_tokens": 100,
+    "temperature": 0.7,
+    "chat_template_kwargs": {"enable_thinking": false}
+  }'
+```
+
+如果服务正常运行，会返回类似以下的JSON响应：
+
+```json
+{
+  "id": "chatcmpl-xxx",
+  "object": "chat.completion",
+  "created": 1234567890,
+  "model": "Qwen3-8B",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "你好！我是Qwen3-8B..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 50,
+    "total_tokens": 60
+  }
+}
+```
