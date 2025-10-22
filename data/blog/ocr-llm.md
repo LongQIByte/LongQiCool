@@ -1,3 +1,16 @@
+---
+title: 'DeepSeek-OCR: 文本Token压缩技术'
+date: '2025-01-15'
+tags: ['OCR', 'LLM', 'Token压缩', 'DeepSeek']
+draft: false
+summary: '介绍DeepSeek-OCR技术，通过将图片中的文本转换为embedding来减少token消耗，提高长文本处理效率。'
+images: ['/static/images/ocr-llm/image.png']
+authors: ['default']
+layout: PostLayout
+---
+
+# DeepSeek-OCR: 文本Token压缩技术
+
 最近DeepSeek出了一篇新的文章：DeepSeek-OCR，这是一项推动文本token压缩的一项工作，整体思路也很清晰。
 
 大概就是一个加满文本的图片，和embed这些文本两者之前的消耗，后者远小于前者。
