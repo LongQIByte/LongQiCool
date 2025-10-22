@@ -7,6 +7,7 @@ import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic'
 // Remark packages
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import remarkToc from 'remark-toc'
 import { remarkAlert } from 'remark-github-blockquote-alert'
 import {
   remarkExtractFrontmatter,
@@ -159,6 +160,7 @@ export default makeSource({
       remarkMath,
       remarkImgToJsx,
       remarkAlert,
+      [remarkToc, { heading: '目录|toc|table[ -]of[ -]contents?', maxDepth: 3 }],
     ],
     rehypePlugins: [
       rehypeSlug,
