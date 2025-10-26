@@ -1,0 +1,76 @@
+---
+title: '使用 SASPlanet 下载离线地图'
+date: '2025-10-05'
+tags: ['地图', 'SASPlanet', '离线地图', 'Tileservice', 'Docker']
+draft: false
+summary: '详细介绍如何使用 SASPlanet 工具在 Mac 上通过虚拟机下载 Google 地图的离线瓦片，并部署为本地地图服务。'
+images: ['/static/images/use-SASPlanet/image-1.png']
+authors: ['default']
+layout: PostLayout
+---
+
+## 概述
+
+SASPlanet 是一款功能强大的离线地图下载工具，可以批量下载各大地图服务商的瓦片数据。本文介绍如何在 Mac 环境下通过 Parallels 虚拟机使用 SASPlanet 下载 Google 地图，并部署为本地瓦片服务。
+
+由于 SASPlanet 目前仅支持 Windows 系统，Mac 用户需要通过虚拟机运行。同时，需要科学上网才能访问 Google 地图服务。
+
+## 目录
+
+## 环境准备
+
+### 1. 虚拟机网络配置
+
+在 Mac 上使用 Clash Meta，开启 TUN 模式和局域网模式后，需要在虚拟机中配置网络代理。
+
+![虚拟机网络配置](/static/images/use-SASPlanet/image-1.png)
+
+在虚拟机中开启系统的代理设置，以便虚拟机能够访问外网。
+
+![开启系统代理](/static/images/use-SASPlanet/image-2.png)
+
+## 地图下载
+
+### 2. 选择地图源
+
+进入 SASPlanet 软件后，需要选择 Google 地图作为数据源。
+
+![选择 Google 地图](/static/images/use-SASPlanet/image-3.png)
+
+### 3. 框选下载区域
+
+在地图上框选需要下载的区域范围。
+
+![框选下载区域](/static/images/use-SASPlanet/image-4.jpg)
+
+### 4. 设置下载参数
+
+选择需要下载的 Zoom 层级（地图缩放层级）。为了加快下载速度，可以勾选 "Split selection to" 选项并填入较大的数值，这样可以启用多并发下载。
+
+![设置下载参数](/static/images/use-SASPlanet/image-5.png)
+
+### 5. 开始下载
+
+等待下载完成，这个过程可能需要一些时间，具体取决于选择的地图范围和 Zoom 层级。
+
+![下载进度](/static/images/use-SASPlanet/image-6.jpg)
+
+## 地图导出与部署
+
+### 6. 导出地图数据
+
+下载完成后，选择导出功能，这一步是将下载的地图转换成为瓦片服务器能支持的格式。
+
+![导出地图数据](/static/images/use-SASPlanet/image-7.png)
+
+选择导出的 Zoom 层级范围。
+
+![选择导出层级](/static/images/use-SASPlanet/image-8.jpg)
+
+### 7. 部署瓦片服务
+
+将导出的地图文件放置到指定目录，使用 Tileservice Docker 镜像即可快速启动本地瓦片地图服务。
+
+![启动 Tileservice](/static/images/use-SASPlanet/image-9.png)
+
+通过以上步骤，你就可以拥有一个完全离线的地图服务，可以在没有网络的情况下使用。
