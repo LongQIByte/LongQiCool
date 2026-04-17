@@ -45,3 +45,11 @@ yarn-error.log*
 
 # Contentlayer
 .contentlayer
+
+# 本地杂项目录（勿入库）
+charged-ieee/
+gakusyun-doc/
+
+# 构建/开发过程生成（与 CI、contentlayer 一致，每次 build 会重写）
+app/tag-data.json
+next-env.d.ts
