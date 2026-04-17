@@ -5,6 +5,7 @@
   "scripts": {
     "start": "next dev",
     "dev": "cross-env INIT_CWD=$PWD next dev",
+    "dev:clean": "rm -rf .next && cross-env INIT_CWD=$PWD next dev",
     "prebuild": "node ./scripts/check-blog-sources.mjs",
     "build": "cross-env INIT_CWD=$PWD next build && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
     "serve": "next start",
