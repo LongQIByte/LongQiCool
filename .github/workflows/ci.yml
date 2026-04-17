@@ -1,0 +1,25 @@
+# 与 Vercel 相同入口：install + production build，推送前可发现 Contentlayer/MDX 问题
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --immutable
+        working-directory: ${{ github.workspace }}
+      - name: Production build
+        run: yarn build
+        working-directory: ${{ github.workspace }}

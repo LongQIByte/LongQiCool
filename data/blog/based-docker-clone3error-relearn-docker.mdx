@@ -1,8 +1,18 @@
+---
+title: '从容器 clone3 的报错来重新学习 Docker'
+date: '2025-01-20'
+tags: ['Docker', '容器', 'Linux']
+draft: false
+summary: '由 jemalloc/clone3/seccomp 报错出发，梳理 Docker 与 Linux namespace、容器隔离的关系。'
+authors: ['default']
+layout: PostLayout
+---
+
 # 从容器clone3的报错来重新学习Docker
 
 ## 起因
 
-tileservice 报错：<jemalloc>: arena 0 background thread creation failed (1)
+tileservice 报错：&lt;jemalloc&gt;: arena 0 background thread creation failed (1)
 
 这里的（1）代表操作 clone3 被 seccomp 拦截。
 
