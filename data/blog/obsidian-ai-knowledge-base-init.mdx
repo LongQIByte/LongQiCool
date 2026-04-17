@@ -1,0 +1,304 @@
+---
+title: 'Obsidian + Claude Code 知识库自动初始化脚本'
+date: '2026-04-16'
+tags: ['Obsidian', 'Claude Code', '知识管理', 'AI', '自动化', '脚本']
+draft: false
+summary: '一篇专门写给 Claude Code 看的初始化指令。人类用户只需把这篇文章丢给 Claude Code，AI 会自动帮你创建好完整的 raw + wiki 知识库骨架。'
+authors: ['default']
+layout: PostLayout
+---
+
+> **给人类读者的说明**：
+> 这篇文章的核心读者其实是 **Claude Code**。你只需要复制这篇文章的链接或内容，然后对 Claude Code 说：
+>
+> "帮我执行这篇初始化脚本，在我指定的目录下搭建知识库。"
+>
+> Claude Code 会自动帮你创建文件夹、写好 `CLAUDE.md`、建立索引和日志文件。
+
+---
+
+## 给 Claude Code 的执行指令
+
+**角色**：你是 Claude Code，一位擅长文件操作和知识库架构的 AI 助手。
+
+**任务**：当用户引用或提供了这篇文章，并要求你"初始化知识库"、"搭建 Obsidian 知识库"或"执行这个脚本"时，请按以下步骤**自动执行**，不要只给出说明，要直接创建文件和文件夹。
+
+### 步骤 1：确认目标根目录
+
+询问用户（如果未明确指定）："请在 Obsidian Vault 里选一个根目录，或者告诉我你希望把知识库建在哪个路径下？"
+
+如果用户已经指定了路径（例如当前工作目录），则以该路径为根目录继续。
+
+### 步骤 2：创建目录结构
+
+在根目录下创建以下文件夹与占位文件（如已存在则跳过；**空目录**可通过在其中放置 `.gitkeep` 或下文步骤 3.5 中的 `index.md` / 月记文件来落实）：
+
+```
+.
+├── raw/                      ← 原始素材，只增不改；按主题分子目录
+├── wiki/                     ← 消化后的知识文章（概念化、可链接）
+│   ├── index.md              ← 全库文集索引
+│   └── log.md                ← Append-only 操作日志
+├── journal/                  ← 日记、个人记录、心得与碎片想法（偏「我」与时间线）
+│   ├── index.md              ← 日志总索引：链到各月日记与长文
+│   ├── daily/                ← 按月的每日笔记：YYYY-MM.md，文内按日期分节
+│   ├── feedback/             ← 工具/工作流反思、复盘类长文（可一篇一文件）
+│   └── ideas/                ← 短洞察、待发芽主题、随手标题党式灵感
+├── projects/                 ← 正在执行的事：代码、站点、内容包、咨询项目等
+│   ├── index.md              ← 项目看板：活跃项一览 + 链到各项目目录
+│   ├── archive/              ← 结项或搁置项目（整目录挪入，不删历史）
+│   └── （各项目子目录）/      ← 例：某产品名/、咨询-某某/；内含 README 或项目内 CLAUDE.md
+├── assets/                   ← 配图、导出图等静态资源
+└── CLAUDE.md                 ← 给 AI 看的「使用说明书」（根目录）
+```
+
+**与 `wiki/` 的分工（务必写进脑内模型）**：
+
+- `wiki/`：对外可分享的**概念与知识**，偏「事」与「论述」，维护索引与 log。
+- `journal/`：偏**个人叙事与时间线**，每日流水、情绪、复盘、灵感；不要求每篇都概念化，但要能在 `journal/index.md` 里被找到。
+- `projects/`：偏**交付与状态**，里程碑、TODO、决策记录、结项说明；与代码仓同路径时，遵守该仓 `.gitignore`，知识库侧只链接不塞 `node_modules`。
+
+### 步骤 3：创建 CLAUDE.md
+
+在根目录创建 `CLAUDE.md`，内容如下：
+
+```markdown
+# Workspace — Personal LLM Wiki
+
+## 目录职责
+
+- `raw/` — 原始素材，**不可变**。Claude 只读，绝不修改。按主题分子目录，允许多级嵌套。PDF/视频/xlsx 保持原文件名。
+- `wiki/` — Claude 维护的消化笔记。允许多级子目录，每篇文章 `.md` 格式，命名自由（描述性即可）。围绕**概念**组织，与 `wiki/index.md`、`wiki/log.md` 联动。
+- `journal/` — **日记与个人记录**，与 wiki 并列、互不替代。
+  - `journal/daily/YYYY-MM.md`：当月合并一篇，按日分节（如 `## YYYY-MM-DD`）；用户口述「记日记」「写进今天」时优先追加此处。
+  - `journal/feedback/`：工具链、协作、效率等**反思与长文**，一篇一文件。
+  - `journal/ideas/`：**短想法、金句、待验证假设**，篇幅可短，日后可升格为 wiki 文章并双向链接回来。
+  - `journal/index.md`：总索引，链到各月日记与重要 feedback/ideas，便于从图谱进日记。
+- `projects/` — **正在做的事**（可执行项目、内容包、站点、自媒体期数等）。
+  - 每个项目一个子目录；根下保留 `projects/index.md` 作看板（状态、下一步、链接到项目内 README 或笔记）。
+  - 结项或长期搁置：整目录移至 `projects/archive/项目名/`，并在看板或 log 中标注原因。
+  - 不是「百科内容」：不写概念定义为主的长文时，优先放 wiki；这里写**状态、决策、TODO、里程碑**。
+  - Obsidian 打开 Vault 时排除 `node_modules/`、`.next/`、`dist/`、`.git` 等大目录，避免卡顿。
+- `assets/` — 配图资源。
+
+## 搜索优先级
+
+当用户提问或要求检索信息时，**优先搜索本资料库内的对应目录**，再考虑调用外部工具或通用知识：
+
+- `projects/` — 项目、代码、可执行任务相关
+- `wiki/` — 知识、概念、已消化的笔记
+- `raw/` — 原始素材、文献、参考资料
+- `journal/`（如存在）— 日记、个人记录、每日笔记
+
+## 两个特殊文件（必须维护）
+
+- `wiki/index.md` — 全库文集。每期 wiki 文章一行，按主题分组，带链接 + 一句话摘要。
+- `wiki/log.md` — Append-only 操作日志。记录每次 Ingest / query / archive / init。
+
+## 三个触发行为
+
+### 触发 1: Ingest（录入素材）
+
+**触发词**："收到 xxx"、"ingest 这个"、"把这个收进来"。给 Claude 一些新素材并暗示要保存。
+
+**运作**：
+
+a. 把素材存进 `raw/` 目录对应的主题小子目录。主题不存在就新建。文件名保持原样（PDF/视频/图片）或起描述性名字（md 笔记）。  
+b. 更新 `wiki/某文章名.md`（关键词 = 主题；文件名按概念起）：
+
+- 如现有文章是同一核心论述 + 允许合并，更新 Sources 和受影响的小节。
+- 如属全新文章 → 新建文章。按概念命名，不写 `raw/` 文件名。
+- 如果文章只是摘要 → 用 `[[概念名|Summary of X]]` 或 `[[文件名]]` 做双向引用。
+  c. **检查冲突**：新素材和已有内容矛盾时，在文章底部加 `[:!conflict:]` 批注并置顶。  
+  d. **更新索引**：在 `wiki/index.md` 中新增或更新该主题的链接和一句话摘要（Updated 日期）。  
+  e. **更新 Append-only 的 `wiki/log.md`**，记录这次动作及对应文件。
+
+### 触发 2: Update（更新已有内容）
+
+**触发词**："更新 xxx"、"这个改了"、"新进展"、"跟进一下"、"mark"。针对已有 wiki 文章或项目给出增量信息。
+
+**运作**：
+
+a. **定位目标**：先搜 `wiki/` 或 `projects/`，找到对应文件。找不到则 fallback 到 Ingest。  
+b. **增量写入**：
+
+- `wiki/` 文章：在最相关小节追加新认知，或在顶部加 `Updated: YYYY-MM-DD`；如属纠错，用删除线保留旧文并标注原因。
+- `journal/`：按用户意图追加「当日」小节、新开 feedback/ideas 篇，或更新 `journal/index.md` 链接；与口述场景（移动端录入）常联动。
+- `projects/`：更新状态、里程碑、TODO 或关键决策记录。
+  c. **检查冲突**：若新信息推翻旧结论，不直接删除旧内容，而是加 `[:!conflict:]` 批注说明变更缘由。  
+  d. **更新索引**：在 `wiki/index.md` 刷新该条目的 Updated 日期和一句话摘要。  
+  e. **更新 `wiki/log.md`**，追加一行：`[YYYY-MM-DD] update | 主题或项目 | 简短说明`（竖线分隔三段）。
+
+### 触发 3: Archive（归档旧内容）
+
+**触发词**："归档 xxx"、"这个项目结束了"、"过时了"、"结项"。把不再活跃的内容移出主视野但保留可检索。
+
+**运作**：
+
+a. **Wiki 文章归档**：若内容被新论述完全替代，在原文顶部加 `status: archived` frontmatter，并添加指向新文章的 `seealso` 链接；不直接删除。  
+b. **项目归档**：将 `projects/某项目/` 移动到 `projects/archive/某项目/`（不存在则新建 archive 目录），并补充结项说明（结果、经验、后续 TODO）。  
+c. **更新索引**：在 `wiki/index.md` 中把该条目标注 `(Archived)` 或移入 "Archived" 分组。  
+d. **更新 `wiki/log.md`**，追加一行：`[YYYY-MM-DD] archive | 主题或项目 | 归档原因`（竖线分隔三段）。
+```
+
+### 步骤 3.5：创建 journal/ 与 projects/ 骨架
+
+在根目录执行（日期占位符由你替换为**执行当天的 ISO 日期**，当月文件名为 `YYYY-MM.md`）：
+
+**A. `journal/index.md`**
+
+```markdown
+# 个人日志索引
+
+> 记录日常、心得与想法。与 [[wiki/index.md|Wiki 知识库]] 和 [[projects/index.md|项目看板]] 共同构成个人数字空间。
+
+---
+
+## 日记
+
+- [[journal/daily/YYYY-MM|YYYY 年 MM 月日记]]（将 YYYY-MM 换成本月）
+
+---
+
+## 反馈 / 反思
+
+（在此链到 `journal/feedback/` 下的文章）
+
+---
+
+## 想法 / 洞察
+
+（在此链到 `journal/ideas/` 下的短文）
+```
+
+**B. `journal/daily/YYYY-MM.md`（当月一篇）**
+
+```markdown
+# YYYY 年 MM 月日记
+
+---
+
+## YYYY-MM-DD
+
+（首日记一条占位；用户口述「记日记」时往当日小节追加）
+```
+
+**C. `projects/index.md`**
+
+```markdown
+# 项目看板
+
+> 活跃项目与近期交付。结项目录移至 `projects/archive/`。
+
+---
+
+## 进行中
+
+（例：`- [[projects/示例项目/README|示例项目]] — 一句话状态`）
+
+---
+
+## 归档入口
+
+- 见目录 `projects/archive/`
+```
+
+**D. 空目录**
+
+创建 `journal/feedback/`、`journal/ideas/`、`projects/archive/`（若文件系统需要占位，可在其内各放一个 `.gitkeep`，或等用户第一篇笔记自然创建）。
+
+### 步骤 4：创建 wiki/index.md
+
+在 `wiki/` 目录下创建 `index.md`，内容如下：
+
+```markdown
+# Wiki 全库文集
+
+> 个人 LLM Wiki 的入口索引，按主题分组维护。更新于 YYYY-MM-DD。
+
+---
+
+## 待分类
+
+- [[wiki/示例文章]] — 这是一篇示例 wiki 文章，用于展示 frontmatter、双向链接和 Sources 的用法。
+
+---
+
+## 关联空间
+
+- [[journal/index.md|个人日志]] — 日记、心得、想法与反思
+- [[projects/index.md|项目看板]] — 正在执行的项目与任务跟踪
+```
+
+> **注意**：将 `YYYY-MM-DD` 替换为当前日期。
+
+### 步骤 5：创建 wiki/log.md
+
+在 `wiki/` 目录下创建 `log.md`，内容如下：
+
+```markdown
+# Wiki 操作日志
+
+Append-only 记录。格式：`[YYYY-MM-DD] action | 主题 | 文件/描述`
+
+---
+
+[YYYY-MM-DD] init | 全库 | 建立 wiki/ 目录骨架，创建 index.md 与 log.md
+```
+
+> **注意**：将 `YYYY-MM-DD` 替换为当前日期。
+
+### 步骤 6：创建示例 wiki 文章（可选但推荐）
+
+在 `wiki/` 目录下创建 `示例文章.md`，作为用户的第一个参考模板：
+
+```markdown
+---
+type: wiki
+topic: 知识管理与认知工具
+status: 活跃
+source: [[raw/某PDF.pdf]]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+# 示例文章
+
+这是你的第一篇 wiki 文章。wiki 文章的写法是：
+
+1. 围绕一个**概念**组织内容，不要是简单的流水账。
+2. 顶部要有 frontmatter（type、topic、status、source、created、updated）。
+3. 文末列出 Sources，指向 `raw/` 里的原始素材。
+4. 使用 Obsidian 的 `[[文章名]]` 语法建立双向链接。
+
+## Sources
+
+- [[raw/某PDF.pdf]]
+```
+
+> **注意**：将 `YYYY-MM-DD` 替换为当前日期。
+
+### 步骤 7：向用户汇报
+
+完成所有文件创建后，向用户汇报：
+
+1. 列出已创建的文件夹和文件（含 `journal/` 子结构与 `projects/index.md`、当月 `journal/daily/` 文件）。
+2. 简要说明 `CLAUDE.md` 的作用，以及 **wiki / journal / projects** 三分工。
+3. 给出下一步建议："你可以尝试说：'帮我 ingest 这篇文章'，把第一篇素材丢进知识库。"或「把刚才口述的内容记进今天的日记」。
+
+---
+
+## 常见问题
+
+**Q：我已经有现成的 Obsidian Vault 了，会不会被覆盖？**
+A：不会。上述步骤只会**创建不存在的文件夹和文件**。如果 `CLAUDE.md` 已经存在，请询问用户是否覆盖，或手动合并。
+
+**Q：为什么需要 `CLAUDE.md`？**
+A：因为 Claude Code 每次进入项目时都会读取它。它相当于整个知识库的"宪法"，规定了 AI 能做什么、不能做什么、优先级是什么。
+
+**Q：这个脚本执行完后，我还要做什么？**
+A：基本骨架已经搭好了。接下来你只需要：
+
+1. 把素材丢进 `raw/`；
+2. 对 Claude Code 说："ingest 这个"；
+3. 让 AI 帮你维护 `wiki/` 的内容和索引。

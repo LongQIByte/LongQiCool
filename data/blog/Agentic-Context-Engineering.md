@@ -1,0 +1,88 @@
+# 【论文解读】Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models
+
+这里需要注意的是context指的是prompt，而不是RAG检索的大量的知识。
+
+这里的context可以理解成为引导LLM行动的一种操作手册，例如里面包括：角色、few-shot等等。
+
+而这里的ACE（agentic context engineering）要做的事情是动态的让它不断演化（self-Improving）.
+
+首先看它的整体效果。
+
+https://arxiv.org/html/2510.04618v1/x1.png
+
+这里生成一个图片。
+
+方法 类型 特点
+ReAct (Base) 基线 不做任何自适应优化，只靠默认 prompt
+ICL / MIPROv2 / GEPA Prompt 优化方法 通过人工或算法迭代 prompt
+DC (Dynamic Cheatsheet) 记忆式学习 利用外部 memory 累积经验，但易出现 context collapse
+ACE (ours) Agentic Context Engineering 模块化生成-反思-整理，防止 collapse 并持续演化
+
+图片上面两个任务的解读：
+
+1. Agent Benchmark（AppWorld） —— 类似自主智能体任务，如多轮推理、代码生成、API调用。
+2. Domain-Specific Benchmark（Financial Analysis） —— 领域专属推理任务，如财务报表分析、数值推断。
+
+Contexts underpin many AI system components, including system prompts that guide downstream tasks [36, 4], memory that carries past facts and experiences [41, 48], and factual evidence that reduces hallucination and supplements knowledge [6].
+
+文章提到context的三种方面：
+
+1. system prompt
+2. memory
+3. factual evidence
+
+ACE会对这些做出优化。
+
+context adaptation是一个新的范式,之前的问题：
+
+1. First, a brevity bias: many prompt optimizers prioritize concise, broadly applicable instructions over comprehensive accumulation. For example, GEPA [4] highlights brevity as a strength, but such abstraction can omit domain-specific heuristics, tool-use guidelines, or common failure modes that matter in practice [16]. This objective aligns with validation metrics in some settings, but often fails to capture the detailed strategies required by agents and knowledge-intensive applications
+2. Second, context collapse: methods that rely on monolithic rewriting by an LLM often degrade into shorter, less informative summaries over time, causing sharp performance declines (Figure 2). In domains such as interactive agents [43, 38, 57], domain-specific programming [53, 56], and financial or legal analysis [33, 18, 44], strong performance depends on retaining detailed, task-specific knowledge rather than compressing it away.
+   brevity：简洁
+   monolithic rewriting: 整体重写
+
+这里要保留原文的，这里的意思就是，目前的context adaptation主要是在于“简化”，而这个简化会丢失语义信息，造成语义崩塌。
+
+而当前的application其实十分需要可用的context信息
+
+We argue that contexts should function not as concise summaries, but as comprehensive, evolving playbooks—detailed, inclusive, and rich with domain insights
+
+作者认为的context是一个comprehensive,包含更多细节的内容，同时是一个自己决定哪些更加重要的事情。
+
+ACE agentic context engineer这个东西，To address these limitations, we introduce ACE (Agentic Context Engineering), a framework for comprehensive context adaptation in both offline settings (e.g., system prompt optimization) and online settings (e.g., test-time memory adaptation).
+优化的是两个：
+
+1. system prompt
+2. test-time memory adaptation,test-time 就是infering time，推理阶段。
+
+## 背景介绍
+
+### context adaptation
+
+大模型的优化有多种：模型训练，模型架构的修改，这里用的是一种不用训练的方法，也就是通过自然语言反馈的方式来做的。这种方法现在也广泛使用，例如：reasoning steps，validation result，usage tools。
+
+### 语义崩塌
+
+这里说的是之前的方法，他们会使用rewrite的方式去重写之前的prompt，或者说context。这种方式可能也是想要这些context更加”规范“，但是这里面会出现隐含的语义塌陷，为什么？
+我这里举个例子，感觉还是比较能想清楚的，就是大概是，人写的内容通常会带着很多“其他无关”的信息。这里的信息实际上不是主要的内容，但是却包含了很多细节内容。
+
+比如，人写日记，通常是 西一榔头，东一榔头。
+
+在大模型的rewrite的过程，因为它会比人更加线性思考，类似于一个文本对于它来说，包含的意义是一个主线，它的概率模型始终会约束它简化到到具体的观点。我想这也是幻觉的主要的原因。
+SFT是llm的根基，它永远是有答案的，它只会说会，而不是回答：“不会”。因此，哪怕它不会，编都会编出来。
+
+基于这样的模型，语义的崩塌，语义的偏离，这就是必然的。
+
+## Agentic Context Engineering (ACE)
+
+基于Dynamic Cheatsheet的设计，这里ACE实际上也是通过Agent的方式来引导优化 context。
+
+https://arxiv.org/html/2510.04618v1/x3.png
+
+the Generator, which produces reasoning trajectories; the Reflector, which distills concrete insights from successes and errors; and the Curator, which integrates these insights into structured context updates. This mirrors how humans learn—experimenting, reflecting, and consolidating—while avoiding the bottleneck of overloading a single model with all responsibilities.
+
+itemized bullets:分项列举
+
+### Incremental Delta Updates
+
+在这里章节，它重新定义了一下context。
+这个context不是一个庞大的prompt，我理解这里的prompt是一个提示词，他是用来做 之前说的 context整理的，比如上下文太长了，这里需要rewrite的时候，它就是那个优化context的提示词？

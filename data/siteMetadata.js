@@ -1,8 +1,8 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'LongQI Blog',
+  title: '废物点心',
   author: 'Tang',
-  headerTitle: 'LongQI Blog',
+  headerTitle: '废物点心',
   description: '🐛🐛🐛🐛🐛',
   language: 'zh-cn',
   theme: 'system', // system, dark or light
